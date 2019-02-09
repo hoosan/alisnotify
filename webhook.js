@@ -106,8 +106,9 @@ async function register(twitterId, dmMessage){
             await db.update({user_name: alisId}, {$push:{followers: obj}});
           }
         } else {
+          const info = await alis.p.users.user_id.info({user_id: alisId})
           resMessage += `${alisId}をフォローしました\n`;
-          await db.insert({user_name: alisId, followers: [{twitter_id: twitterId}], sort_key: articles.Items[0].sort_key})
+          await db.insert({user_name: alisId, followers: [{twitter_id: twitterId}], sort_key: articles.Items[0].sort_key, user_display_name: info.user_display_name})
         }
       }
 

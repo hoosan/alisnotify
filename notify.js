@@ -20,9 +20,10 @@ var app = express();
 
 app.get("/notify", async (req, res) => {
 
-  try{
-    const docs = await db.find();
-    for (let doc of docs){
+  const docs = await db.find();
+  for (let doc of docs){
+
+    try{
 
       const alisId = doc.user_name;
 
@@ -56,10 +57,10 @@ app.get("/notify", async (req, res) => {
           await reply(follower.twitter_id, message);
         }
       }
+    } catch(e){
+      console.log(`error in notify.js. id:${alisId}`);
+      console.log(e);
     }
-  } catch(e){
-    console.log("error in notify.js");
-    console.log(e);
   }
   res.sendStatus(200);
 
