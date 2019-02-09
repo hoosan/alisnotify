@@ -9,7 +9,7 @@ var app = express();
 
 app.get("/update", async (req, res) => {
 
-  const docs = await dbf.find();
+  const docs = await db.find();
 
   for (let doc of docs){
 
@@ -33,8 +33,7 @@ app.get("/update", async (req, res) => {
       console.log(`error in update.js id:${alisId}`);
       console.log(e);
     }
-
   }
-}
+})
 
 module.exports = app;

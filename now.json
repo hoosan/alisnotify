@@ -4,10 +4,12 @@
   "builds": [
     { "src": "index.js", "use": "@now/node" },
     { "src": "webhook.js", "use": "@now/node" },
-    { "src": "notify.js", "use": "@now/node" }
+    { "src": "notify.js", "use": "@now/node" },
+    { "src": "update.js", "use": "@now/node" }
   ],
   "routes": [
     { "src": "/webhook", "dest": "webhook.js" },
-    { "src": "/notify", "dest": "notify.js" }
+    { "src": "/notify", "dest": "notify.js" },
+    { "src": "/update", "dest": "update.js" }
   ]
 }
