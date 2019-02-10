@@ -34,6 +34,7 @@ app.get("/update", async (req, res) => {
       console.log(e);
     }
   }
+  res.sendStatus(200);
 })
 
 module.exports = app;

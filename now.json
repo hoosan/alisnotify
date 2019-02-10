@@ -11,5 +11,5 @@
     { "src": "/webhook", "dest": "webhook.js" },
     { "src": "/notify", "dest": "notify.js" },
     { "src": "/update", "dest": "update.js" }
-  ]
+    ]
 }

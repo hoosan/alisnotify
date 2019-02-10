@@ -2,7 +2,7 @@
   "name": "notify-cron",
   "version": "1.0.0",
   "description": "",
-  "main": "update.js",
+  "main": "notify.js",
   "scripts": {
     "start": "micro"
   },

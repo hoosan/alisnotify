@@ -7,6 +7,7 @@ const alis = require("alis");
 const mongodb = require("mongodb");
 const DB = require("monk")(process.env.MONGODB_URL);
 const db = DB.get("alisnotify");
+const dbra = DB.get("recent-article-sort-key");
 
 var twitter = {};
 twitter.oauth = {
@@ -20,48 +21,38 @@ var app = express();
 
 app.get("/notify", async (req, res) => {
 
-  const docs = await db.find();
-  for (let doc of docs){
+  const recent_article = await dbra.find();
 
-    try{
+  await alis.p.articles.recent({limit: 100}).then(async (json)=>{
 
-      const alisId = doc.user_name;
-
-      const articles = await alis.p.users.user_id.articles.public({
-        limit: 1,
-        user_id: alisId
-      })
-
-      if (typeof articles.Items === "undefined" || articles.Items.length == 0) {
-        continue;
+    if (json.Items[0].sort_key > recent_article[0].sort_key)
+    {
+      await dbra.update({},{$set: {sort_key: json.Items[0].sort_key }});
+    }
+    else {
+      return;
+    }
+    for (let i of json.Items){
+      if (recent_article[0].sort_key >= i.sort_key)
+      {
+        break
       }
+      const an = await db.find({user_name: i.user_id})
+      if (an.length > 0) {
 
-      const sort_key_now = articles.Items[0].sort_key;
-      const url = `https://alis.to/${alisId}/articles/${articles.Items[0].article_id}`;
-      const overview = articles.Items[0].overview;
-      const title = articles.Items[0].title;
-      if (sort_key_now > doc.sort_key){
-
-        const res_update = await db.update({user_name: alisId},{$set: {sort_key: sort_key_now}});
-
-        const info = await alis.p.users.user_id.info({user_id: alisId})
+        const url = `https://alis.to/${i.user_id}/articles/${i.article_id}`;
         let message = "[ALIS Notify] 新着記事\n"
-        message += `${title}\n${info.user_display_name}(ID: ${alisId})\n****\n`
-        if (overview != null){
-            message += `${overview.trim()}..\n`
+        message += `${i.title}\n${an[0].user_display_name}(ID: ${i.user_id})\n****\n`
+        if (i.overview != null){
+          message += `${i.overview.trim()}..\n`
         }
         message += `****\n${url}\n`
-
-        const followers = doc.followers;
-        for (let follower of followers){
+        for (let follower of an[0].followers){
           await reply(follower.twitter_id, message);
         }
       }
-    } catch(e){
-      console.log(`error in notify.js. id:${alisId}`);
-      console.log(e);
     }
-  }
+  }).catch((err)=>{console.log(err)})
   res.sendStatus(200);
 
 })
