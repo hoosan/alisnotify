@@ -7,34 +7,32 @@ const db = DB.get("alisnotify")
 
 var app = express();
 
-app.get("/update", async (req, res) => {
+app.get("*", async (req, res) => {
 
-  const docs = await db.find();
+  try {
+    const docs = await db.find();
 
-  for (let doc of docs){
-
-    try{
-
+    await Promise.all(docs.map( async (doc) => {
       const alisId = doc.user_name;
       const articles = await alis.p.users.user_id.articles.public({
         limit: 1,
         user_id: alisId
       })
+      const items = articles.Items || [];
 
-      if (typeof articles.Items === "undefined" || articles.Items.length == 0) {
-        continue;
+      if (items.length === 0) {
+        return
       }
 
       const info = await alis.p.users.user_id.info({user_id: alisId})
       await db.update({user_name: alisId},{$set: {user_display_name: info.user_display_name}});
 
-    } catch(e){
-
-      console.log(`error in update.js id:${alisId}`);
-      console.log(e);
-    }
+    }))
+    res.sendStatus(200);
+  } catch (e) {
+    console.log(e)
+    res.sendStatus(500);
   }
-  res.sendStatus(200);
 })
 
 module.exports = app;

@@ -19,43 +19,42 @@ twitter.oauth = {
 
 var app = express();
 
-app.get("/notify", async (req, res) => {
+app.get("*", async (req, res) => {
 
-  const recent_article = await dbra.find();
+  try {
 
-  await alis.p.articles.recent({limit: 100}).then(async (json)=>{
+    const recent_article = await dbra.findOne();
 
-    if (json.Items[0].sort_key > recent_article[0].sort_key)
+    const json = await alis.p.articles.recent({limit: 100});
+    const items = json.Items || [];
+
+    const recentItems = items.filter((item) => item.sort_key > recent_article.sort_key);
+
+    if (json.Items[0].sort_key > recent_article.sort_key)
     {
       await dbra.update({},{$set: {sort_key: json.Items[0].sort_key }});
-    }
-    else {
-      return;
-    }
-    for (let i of json.Items){
-      if (recent_article[0].sort_key >= i.sort_key)
-      {
-        break
-      }
-      const an = await db.find({user_name: i.user_id})
-      if (an.length > 0) {
 
-        const url = `https://alis.to/${i.user_id}/articles/${i.article_id}`;
-        let message = "[ALIS Notify] 新着記事\n"
-        message += `${i.title}\n${an[0].user_display_name}(ID: ${i.user_id})\n****\n`
-        if (i.overview != null){
-          message += `${i.overview.trim()}..\n`
-        }
-        message += `****\n${url}\n`
-        for (let follower of an[0].followers){
-          await reply(follower.twitter_id, message);
-        }
-      }
+      await Promise.all(recentItems.map( async (item) => {
+        const an = await db.findOne({user_name: item.user_id}) || {};
+        const followers = an.followers || [];
+        const url = `https://alis.to/${item.user_id}/articles/${item.article_id}`;
+        const message = "[ALIS Notify] 新着記事\n" + `${item.title}\n${an.user_display_name}(ID: ${item.user_id})\n${url}\n`
+        await Promise.all(followers.map( async (follower) => await reply(follower.twitter_id, message)))
+      }));
+
     }
-  }).catch((err)=>{console.log(err)})
-  res.sendStatus(200);
+
+    res.sendStatus(200);
+  } catch (e) {
+    console.log(e)
+    res.sendStatus(500)
+  }
 
 })
+
+async function testReply(userid, message) {
+  console.log(userid, message)
+}
 
 async function reply(userid, message){
 

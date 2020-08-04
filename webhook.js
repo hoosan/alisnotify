@@ -3,7 +3,6 @@ const path = require("path");
 const request = require('request');
 require("dotenv").config({ path: path.resolve(__dirname, ".env") })
 const bodyParser = require('body-parser');
-const monk = require('monk');
 const alis = require('alis');
 const DB = require("monk")(process.env.MONGODB_URL);
 const db = DB.get("alisnotify");
@@ -20,7 +19,7 @@ twitter.oauth = {
 
 var app = express();
 
-app.get('/webhook', (req, res) => {
+app.get('*', (req, res) => {
 
   let crc_token = req.query.crc_token;
   if (crc_token) {
@@ -39,7 +38,7 @@ app.get('/webhook', (req, res) => {
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.post("/webhook", async (req, res) => {
+app.post("*", async (req, res) => {
 
   res.setHeader('Content-Type', 'text/plain');
 
@@ -79,7 +78,8 @@ app.post("/webhook", async (req, res) => {
 });
 
 async function register(twitterId, dmMessage){
-  const lines = dmMessage.split('\n');
+  const lines = dmMessage.replace("@", "").split(/["　"" "\n]/);
+
   var resMessage = "";
 
   for (let alisId of lines) {
