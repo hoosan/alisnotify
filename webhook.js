@@ -1,11 +1,8 @@
 const express = require('express');
-const path = require("path");
 const request = require('request');
-require("dotenv").config({ path: path.resolve(__dirname, ".env") })
+require("dotenv").config();
 const bodyParser = require('body-parser');
 const alis = require('alis');
-const DB = require("monk")(process.env.MONGODB_URL);
-const db = DB.get("alisnotify");
 
 const crypto = require('crypto');
 
@@ -16,6 +13,14 @@ twitter.oauth = {
   token: process.env.TWIBOT_TWITTER_TOKEN,
   token_secret: process.env.TWIBOT_TWITTER_TOKEN_SECRET
 };
+
+const client = await MongoClient.connect(process.env.MONGODB_URL, {
+  poolSize: 10,
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+const alisnotify = await client.db("alisnotify");
+const db = await alisnotify.collection("alisnotify");
 
 var app = express();
 
@@ -96,14 +101,14 @@ async function register(twitterId, dmMessage){
       if (typeof articles.Items === "undefined" || articles.Items.length == 0) {
         resMessage += `${alisId}はALIS未登録ユーザです\n`;
       } else {
-        const docs = await db.find({user_name: alisId}, {limit:1});
+        const docs = await db.findOneAndupdate({user_name: alisId}, {limit:1});
         if (docs.length > 0) {
           if (await docs[0].followers.findIndex(({twitter_id}) => twitter_id === twitterId) >= 0){
             resMessage += `${alisId}はフォロー済みです\n`;
           } else {
             resMessage += `${alisId}をフォローしました\n`
             const obj = {twitter_id: twitterId};
-            await db.update({user_name: alisId}, {$push:{followers: obj}});
+            await db.findOneAndupdate({user_name: alisId}, {$push:{followers: obj}});
           }
         } else {
           const info = await alis.p.users.user_id.info({user_id: alisId})
@@ -152,7 +157,7 @@ async function removeFollow(twitterId, dmMessage){
     }
 
     const obj = {twitter_id: twitterId};
-    const res = await db.update({user_name: alisId}, {$pull:{followers: obj}});
+    const res = await db.findOneAndupdate({user_name: alisId}, {$pull:{followers: obj}});
     if (res.nModified > 0){
       resMessage += `${alisId}のフォローを解除しました\n`;
     } else {

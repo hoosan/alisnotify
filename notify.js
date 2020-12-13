@@ -1,13 +1,8 @@
 const express = require('express');
-const path = require("path");
 const request = require('request');
-const {send} = require('micro');
-require("dotenv").config({ path: path.resolve(__dirname, ".env") });
+require("dotenv").config();
 const alis = require("alis");
-const mongodb = require("mongodb");
-const DB = require("monk")(process.env.MONGODB_URL);
-const db = DB.get("alisnotify");
-const dbra = DB.get("recent-article-sort-key");
+const MongoClient = require('mongodb').MongoClient;
 
 var twitter = {};
 twitter.oauth = {
@@ -20,6 +15,15 @@ twitter.oauth = {
 var app = express();
 
 app.get("*", async (req, res) => {
+
+  const client = await MongoClient.connect(process.env.MONGODB_URL, {
+    poolSize: 10,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  const alisnotify = await client.db("alisnotify");
+  const db = await alisnotify.collection("alisnotify");
+  const dbra = await alisnotify.collection("recent-article-sort-key");
 
   try {
 

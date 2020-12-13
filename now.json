@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "alias": "alisnotify",
   "builds": [
     { "src": "index.js", "use": "@now/node" },
     { "src": "webhook.js", "use": "@now/node" },
