@@ -14,14 +14,6 @@ twitter.oauth = {
   token_secret: process.env.TWIBOT_TWITTER_TOKEN_SECRET
 };
 
-const client = await MongoClient.connect(process.env.MONGODB_URL, {
-  poolSize: 10,
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-const alisnotify = await client.db("alisnotify");
-const db = await alisnotify.collection("alisnotify");
-
 var app = express();
 
 app.get('*', (req, res) => {
@@ -87,6 +79,14 @@ async function register(twitterId, dmMessage){
 
   var resMessage = "";
 
+  const client = await MongoClient.connect(process.env.MONGODB_URL, {
+    poolSize: 10,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  const alisnotify = await client.db("alisnotify");
+  const db = await alisnotify.collection("alisnotify");
+  
   for (let alisId of lines) {
 
     // 半角英数以外はスキップ
@@ -128,6 +128,14 @@ async function register(twitterId, dmMessage){
 
 async function checkFollowList(twitterId, dmMessage){
 
+  const client = await MongoClient.connect(process.env.MONGODB_URL, {
+    poolSize: 10,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  const alisnotify = await client.db("alisnotify");
+  const db = await alisnotify.collection("alisnotify");
+  
   const lines = dmMessage.split('\n');
   var resMessage = "";
 
@@ -148,6 +156,14 @@ async function removeFollow(twitterId, dmMessage){
   const lines = dmMessage.split('\n');
   var resMessage = "";
 
+  const client = await MongoClient.connect(process.env.MONGODB_URL, {
+    poolSize: 10,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  const alisnotify = await client.db("alisnotify");
+  const db = await alisnotify.collection("alisnotify");
+  
   for (let alisId of lines) {
 
     // 半角英数以外はスキップ
